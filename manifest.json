@@ -10,6 +10,7 @@
         "result": "/app/output/result.json"
       },
       "files": [
+        "GITHUB_URL.txt",
         "README.md",
         "SKILL.md",
         "examples/README.md",
@@ -34,7 +35,8 @@
         "scripts/render_svg.py",
         "scripts/run.py",
         "scripts/selftest.py"
-      ]
+      ],
+      "github": "https://github.com/sprw-li/scientific-editable-schematic"
     }
   ]
 }
