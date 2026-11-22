@@ -90,10 +90,11 @@ the gold figure*, enumerated by the tool (the list is printed and stored in
   **0.07 s – 3.7 s**, so treat the multiplier as "one to two orders of magnitude", not a precise
   figure.
 * The Skill needs **0** manual repairs on both fixtures at the code-verified revision
-  (`tree_sha256 6ebab3c237a0d9986a92ea122baa333d79fe0eda87d11bc69c6953cf4b31b84d`); the naive
-  baseline needs **7** on each. The last revision change was documentation/metadata only
-  (`manifest.json`, `SKILL.md`, `references/result_contract.md`), so these comparison numbers were
-  not recomputed against different code.
+  (`tree_sha256 2ec1a519aa7fad72e4920ff1dd6aa36e2eff186736e9364dea4bd43aee0a30a9`); the naive
+  baseline needs **7** on each. The last two revision rounds touched the pipeline's warning
+  escalation (`run.py`), `selftest.py` and documentation; the stages this comparison measures
+  (`prepare/render/export/finish`) behave identically, and the numbers below were re-measured on
+  this tree.
 * Case B's Skill side wins the trap that the baseline falls into (the stale caption): the
   baseline reproduces "mm" and two taxa, which is exactly the failure the fixture was built to
   catch. That is a *fixture-specific* gain; it does not prove the Skill would beat a baseline on

@@ -224,12 +224,27 @@ def _body(args, res, examples, work, out, t0):
 
     # ---------------- 2. render ----------------
     res.section("render")
-    # An unrevised draft must not be reported as a finished figure.
+    # An unrevised draft must not be reported as a finished figure, and it must be
+    # an error-class condition rather than a soft downgrade.
     code, payload = _run(["render", "--work", work, "--output", out])
+    draft_codes = set((payload or {}).get("error_codes") or [])
     res.add("unrevised draft is not reported ok",
             (payload or {}).get("status") == "partial" and (payload or {}).get("used_draft") is True,
             "status=%s used_draft=%s" % ((payload or {}).get("status"),
                                          (payload or {}).get("used_draft")))
+    res.add("unrevised draft is an error-class gate (E_MODEL_NOT_REVISED)",
+            code == 4 and "E_MODEL_NOT_REVISED" in draft_codes,
+            "exit=%s codes=%s" % (code, sorted(draft_codes)))
+    # Blocking warnings must actually be escalated, not merely recorded.
+    promoted = run_mod._promote_blocking_warnings(
+        {"errors": [], "warnings": [{"code": "W_BAR_BASELINE_TRUNCATED", "message": "x"},
+                                    {"code": "W_LONG_LABEL", "message": "y"}]})
+    res.add("truncated bar baseline is escalated to an error",
+            any(e.get("code") == "E_BAR_BASELINE_TRUNCATED" for e in promoted["errors"])
+            and all(w.get("code") != "W_BAR_BASELINE_TRUNCATED" for w in promoted["warnings"])
+            and any(w.get("code") == "W_LONG_LABEL" for w in promoted["warnings"]),
+            "errors=%s warnings=%s" % ([e.get("code") for e in promoted["errors"]],
+                                       [w.get("code") for w in promoted["warnings"]]))
     model_path = os.path.join(work, "figure_model.json")
     shutil.copyfile(os.path.join(examples, "expected_model.json"), model_path)
     code, payload = _run(["render", "--work", work, "--output", out])

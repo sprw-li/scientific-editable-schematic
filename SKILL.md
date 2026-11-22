@@ -184,6 +184,23 @@ python "$SKILL/scripts/selftest.py"        # 退出码 0 才算通过（含真�
 "scientific judgement remains native/LLM Judge"。材料自相矛盾时，正确做法是写入 `uncertainty`
 并让 `status` 降级，而不是在两层之间选一个硬编。
 
+**第一层能拦什么、不能拦什么（别把主张说大）**：
+
+| | 例子 | 门禁 |
+|---|---|---|
+| **能拦**：无来源支持的断言 | 图里出现材料中没有的 `TRPM6`、凭空的时间点/浓度/单位 | `E_LABEL_NOT_IN_SOURCE` / `E_NUMBER_NOT_IN_SOURCE` / `E_UNIT_MISSING` / `E_QUOTE_NOT_FOUND` |
+| **能拦**：与来源语义相反的方向 | 来源写"抑制"却画成激活 | `E_DIRECTION_UNSUPPORTED` |
+| **能拦**：图与所依据数据不一致 | 图例分类数 ≠ 数据分类数；柱状图截断基线 | `E_LEGEND_DATA_MISMATCH` / **`E_BAR_BASELINE_TRUNCATED`** |
+| **能拦**：该裁决却没裁决 | Agent 未修订草稿就直接渲染 | **`E_MODEL_NOT_REVISED`** |
+| **不能拦**：有逐字来源但**科学上不该入图**的实体 | 材料里确实写着、但把它画进机制链条是错的 | 属第二层，由 Agent/评审负责；Skill 只能把该判断的留痕与不确定项摆出来 |
+
+### 两条硬门禁（会阻止 `status=ok`，不是提示）
+
+- **`E_MODEL_NOT_REVISED`**：`render` 回退到 `figure_model.draft.json` 时必然产生 ⇒ 该次运行不可能以
+  `status=ok` 结束（`render` exit 4，`finish` 降级，`finish --strict` exit 3）。
+- **`E_BAR_BASELINE_TRUNCATED`**：柱状图几何与"值域必须含 0"相伴出现非零基线时产生。layout 侧原为
+  警告（它能照常画出来），本 Skill 在流水线层把它**升级为错误**——因为"能画"不等于"可以当作投稿图"。
+
 ## 边界与诚实性
 
 - 不联网；只用 Python 3 标准库（第三方按可用性探测，缺失如实记录）。

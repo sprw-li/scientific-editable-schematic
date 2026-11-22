@@ -199,6 +199,29 @@ def _error_codes(issues, prefix):
     return sorted({i.get("code", "") for i in issues.get("errors", []) if i.get("code")})
 
 
+# Warnings that describe a misrepresentation rather than a style preference. They
+# are escalated to errors because a run that finishes `ok` with one of these is
+# claiming a figure is fit for submission when it is not.
+BLOCKING_WARNINGS = {
+    "W_BAR_BASELINE_TRUNCATED": "E_BAR_BASELINE_TRUNCATED",
+}
+
+
+def _promote_blocking_warnings(issues):
+    """Move blocking warnings into `errors`, keeping the origin visible."""
+    promoted, kept = [], []
+    for warn in issues.get("warnings", []) or []:
+        code = (warn or {}).get("code")
+        if code in BLOCKING_WARNINGS:
+            promoted.append(dict(warn, code=BLOCKING_WARNINGS[code], promoted_from=code))
+        else:
+            kept.append(warn)
+    if promoted:
+        issues["warnings"] = kept
+        issues["errors"] = list(issues.get("errors", [])) + promoted
+    return issues
+
+
 def _environment(work):
     env = {
         "recorded_utc": now_utc(),
@@ -314,7 +337,7 @@ def cmd_prepare(args):
 # --------------------------------------------------------------------------
 # stage: render
 # --------------------------------------------------------------------------
-def _do_render(args, model, work, out, case_id, *, record=True):
+def _do_render(args, model, work, out, case_id, *, record=True, is_draft=False):
     model_mod = _load("model")
     layout_mod = _load("layout")
     svg_mod = _load("render_svg")
@@ -329,6 +352,19 @@ def _do_render(args, model, work, out, case_id, *, record=True):
         "warnings": list(issues.get("warnings", [])) + list(lay_issues.get("warnings", [])),
         "stats": {"model": issues.get("stats", {}), "layout": lay_issues.get("stats", {})},
     }
+    # A diagnostic that means "this figure misrepresents the data" cannot be
+    # advisory. Layout reports such a shape as a warning (it can still render it);
+    # at the pipeline level we escalate it so the run cannot finish as `ok`.
+    merged = _promote_blocking_warnings(merged)
+    # "The agent must revise the draft" is a requirement, not a hint: falling back
+    # to the machine-generated draft is an error-class condition for this run.
+    if is_draft:
+        merged["errors"].append({
+            "code": "E_MODEL_NOT_REVISED",
+            "message": ("the pipeline fell back to %s; the agent has not written %s with its "
+                        "scientific judgement" % (DRAFT_NAME, MODEL_NAME)),
+            "where": MODEL_NAME,
+        })
     write_json(os.path.join(work, ISSUES_NAME), merged)
     write_json(os.path.join(work, "layout.json"), layout)
 
@@ -434,10 +470,10 @@ def cmd_render(args):
     if is_draft:
         log("[render] WARNING: using the unrevised draft model; provenance may be "
             "incomplete. The agent should write %s first." % MODEL_NAME)
-    res = _do_render(args, model, work, out, case_id)
-    # An unrevised draft is not a failure of the gates, but it is not a finished
-    # figure either: the model-level judgement step has not happened yet, so the
-    # status says partial and the reason is reported instead of a silent "ok".
+    res = _do_render(args, model, work, out, case_id, is_draft=is_draft)
+    # An unrevised draft is not a finished figure: the model-level judgement step
+    # has not happened. It is reported as an error-class condition (see
+    # _do_render) so neither render nor finish can call the run complete.
     status = res["status"]
     if status == "ok" and is_draft:
         status = "partial"
@@ -451,11 +487,12 @@ def cmd_render(args):
         "error_codes": _error_codes(res["issues"], "E_"),
         "source_map": {"bound": res["source_map"]["bound_count"],
                        "unsupported": res["source_map"]["unsupported_count"]},
-        "next": ["run: export"] if status == "ok" else (
-            ["the agent has not revised the draft model; write %s with the real "
-             "scientific judgement, then re-run render" % MODEL_NAME] if is_draft and
-            not res["issues"]["errors"] else
-            ["fix the reported errors in %s and re-run render" % MODEL_NAME]),
+        "next": (["run: export"] if status == "ok" else
+                 (["the agent has not revised the draft model; write %s with the real "
+                   "scientific judgement, then re-run render" % MODEL_NAME] if is_draft and
+                  not [e for e in res["issues"]["errors"]
+                       if e.get("code") != "E_MODEL_NOT_REVISED"] else
+                  ["fix the reported errors in %s and re-run render" % MODEL_NAME])),
     }
     emit(payload)
     return OK if not res["issues"]["errors"] else COMPLIANCE

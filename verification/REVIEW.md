@@ -5,27 +5,25 @@
 
 **Revisions.** This is the **final, Lead-declared frozen** revision:
 
-* **code-verified tree `6ebab3c237a0d9986a92ea122baa333d79fe0eda87d11bc69c6953cf4b31b84d`** —
-  25 files, 636 757 bytes. The hash was taken **before and after** the whole suite and was
+* **code-verified tree `2ec1a519aa7fad72e4920ff1dd6aa36e2eff186736e9364dea4bd43aee0a30a9`** —
+  25 files, 641 114 bytes. The hash was taken **before and after** the whole suite and was
   identical (`work/verify/_pin_before.json` / `_pin_after.json`), and it stayed identical through
   the additional validator / selftest runs. Every result in §1 refers to this tree.
-* The last change was **documentation and metadata only** (3 Lead-owned files: `manifest.json`,
-  `SKILL.md`, `references/result_contract.md`); no code module changed, so the code-level results
-  carry over from the previous pin. The four component hashes the Lead quoted at that point were
-  **re-computed by me** and match exactly: `scripts/render_svg.py` `e3fc96b7…f111` (38 771 B),
-  `scripts/layout.py` `a0097801…9074` (133 942 B), `scripts/compliance.py` `ddf6bb5d…d31f`
-  (92 816 B), `scripts/export.py` `48e43b0b…6f4a2` (79 324 B) — unchanged in this round.
+* This round changed **code** (`scripts/run.py`, `scripts/selftest.py`) plus `SKILL.md`, so the
+  whole suite was re-executed rather than carried over. The earlier component hashes
+  (`render_svg.py e3fc96b7…`, `layout.py a0097801…`, `compliance.py ddf6bb5d…`, `export.py 48e43b0b…`)
+  are unchanged in this round.
 * Frozen to `work/freeze/source_hashes.json`; `py -3 work\verify\hash_snapshot.py --compare` →
   `identical: true` **and** `manifest_matches_tree: true`, exit 0 (0 added / 0 removed / 0 changed,
   25 files, 0 `__pycache__`, 0 `*.pyc`, 0 symlinks).
 
-**Drift history (why the pin matters):** the tree moved under verification four times during this
+**Drift history (why the pin matters):** the tree moved under verification five times during this
 task (layout.py 03:12, `references/layout_and_svg.md` 03:17, the render/layout/export/compliance
-owner round, and this final doc round). Each time `hash_snapshot.py --compare` exited non-zero and
-named the changed file. Earlier revisions I executed against — `802ed06f…`, `95271984…`,
-`d60fb267…`, `28535a1f…` — are superseded by the numbers below. **Any write to
-`work/submission/**` after this point invalidates the correspondence and re-arms the gate** — run
-`--compare` as the last step before submitting.
+owner round, the manifest/doc round, and this blocking-warning round). Each time
+`hash_snapshot.py --compare` exited non-zero and named the changed file. Earlier revisions I
+executed against — `802ed06f…`, `95271984…`, `d60fb267…`, `28535a1f…`, `6ebab3c2…` — are superseded
+by the numbers below. **Any write to `work/submission/**` after this point invalidates the
+correspondence and re-arms the gate** — run `--compare` as the last step before submitting.
 
 Three states are used strictly. `PASS` = I executed the check and it passed. `FAIL` = I executed
 it and it failed. `UNVERIFIED` = I did **not** execute it (or cannot execute it here) — it is never
@@ -43,8 +41,8 @@ candidate's gates appear only where they are the object under test (the negative
 | positive end-to-end (3 fixtures, real CLI) | `py -3 work\verify\harness.py run` | **70 PASS / 0 FAIL / 0 UNVERIFIED**, exit 0 (case-a 26, case-b 29, case-c 15) |
 | adversarial negatives | `py -3 work\verify\harness.py negative` | **20 injected, 20 detected, 0 vacuous skips, 20 injections independently proven real**, exit 0 |
 | freeze / anti-drift | `py -3 work\verify\hash_snapshot.py --compare` | `identical: true`, exit 0 |
-| candidate selftest (re-run by me) | `py -3 work\submission\scripts\selftest.py` | `PASS (65 passed, 0 failed, 0 unavailable, 0 vacuous skips)`, exit 0, 53.5 s |
-| skill-submission validator (re-run by me) | `py -3 D:\Borium_Contest\_shared\tools\validate_skill_submission.py work\submission` | `status: ok`, 25 files, 636 757 bytes, `errors=[]`, exit 0 |
+| candidate selftest (re-run by me) | `py -3 work\submission\scripts\selftest.py` | `PASS (67 passed, 0 failed, 0 unavailable, 0 vacuous skips)`, exit 0, 43.9 s |
+| skill-submission validator (re-run by me) | `py -3 D:\Borium_Contest\_shared\tools\validate_skill_submission.py work\submission` | `status: ok`, 25 files, 641 114 bytes, `errors=[]`, exit 0 |
 | bundled example chain (re-run by me) | `run.py prepare→render→export(--journal nature --dpi 300)→finish --strict` | exit 0/0/0/0, `status=ok`, `missing_required_fields=[]`, 16/16 checks, `result.json` self digest recomputable, 5 formats (`work/verify/runs/examples_final/`) |
 | fair baseline comparison | `py -3 work\verify\baseline_run.py --cases case-a,case-b` | Skill 7/7 directed edges typed, 24/24 and 7/7 provenance, **0 manual repairs**; naive baseline 4/7 endpoints, 0/7 typed, 0 provenance, 7 repairs |
 
@@ -87,6 +85,8 @@ visual judgement was applied (`INDEPENDENT_LIMITS.md` §3).
 | B12 | a source-preserving edit keeps untouched content and records before/after | PASS | case-c: `C04` edit exit 0 `post_edit_error_codes=[]`; `C06` change log has one entry per op; `C07`–`C10` the three requested changes are applied (unit mm→cm, colour `#009E73`→`#CC79A7` consistently, row 6.6→6.2 with mean recomputed to 5.544); `C11` SVG/PDF/PNG hashes all change; `C12` every untouched id/label/value/colour/source/canvas/panel is preserved |
 | B13 | provenance survives the edit | PASS | `C12` compares each untouched `entity.source` and `legend.source` before/after; `run.py:724-727` records `provenance_preserved` |
 | B14 | the gate is honest when it fails | PASS | failures return exit 4 with `figure_issues.json` written and partial artifacts preserved (all 13 model negatives); `result.json` is written early as `partial` (`run.py:242`); a crash was never observed (negative check `NG01_no_tracebacks`, 20/20 runs) |
+| B15 | **an unrevised draft cannot be presented as finished** — the revision requirement is error-class, not advice | PASS | end-to-end through the real CLI: `render` on the draft-only work dir returns **exit 4**, `status=partial`, with `E_MODEL_NOT_REVISED` in `render_report.json` for case-a (1 error) and case-b (2 errors incl. `E_UNIT_MISSING`); `finish --strict` stays exit 3. My harness deliberately only *observes* this step (`OBS04_unrevised_draft_render_behaviour`), so the change did not invalidate any positive expectation — see §3 observation 1 for the re-measured wording |
+| B16 | **a truncated bar baseline cannot finish `status=ok`** | PASS (two layers) | layer 1 prevention: for a category-axis bar chart the value domain is forced to include 0 (`layout.py:1968-1969`), verified from the artifact by `OBS_B08_bar_baseline` (ticks `0,2,4,6`; bar-height ratio 3.79 == data ratio 3.79). layer 2 escalation: direct probe of the new logic — `run._promote_blocking_warnings({warnings:[W_BAR_BASELINE_TRUNCATED, W_LONG_LABEL, W_EMPTY_LEGEND]})` returns `errors=[('E_BAR_BASELINE_TRUNCATED','promoted_from':'W_BAR_BASELINE_TRUNCATED')]` and leaves the other two as warnings (`run.py:205-216`, `:358`). See §3 observation 10 for the reachability nuance |
 
 ### 2.3 Reliability, robustness, ecosystem
 
@@ -95,9 +95,9 @@ visual judgement was applied (`INDEPENDENT_LIMITS.md` §3).
 | C1 | deterministic rendering | PASS | `P06_render_deterministic`: two fresh renders of the same model produce a byte-identical SVG (sha256 compared in-run) |
 | C2 | injected defects are caught by a *specific* code, not by crashes | PASS | 20/20 detected; each detection requires the expected code in the parsed JSON **and** (for element-scoped checks) the reported `where` to name the injected element; crash ⇒ no detection (`harness.py:run_negative`); anti-vacuity: none of the expected codes fires on the pristine model/layout/artifacts (recorded per defect as `preexisting_in_baseline`) |
 | C3 | exception handling on bad input | PASS | empty input → exit 3 + `needs_human`; missing model → exit 2; unknown edit target → exit 2; unsupported op name → exit 2 (each with a single-JSON stdout and no traceback) |
-| C4 | the shipped selftest is real end-to-end and its negatives are code-based | PASS | I re-ran it: `PASS (65 passed, 0 failed, 0 unavailable, 0 vacuous skips)`, exit 0, 77.0 s (`work/verify/_selftest.out`). Its negative loop asserts code intersection and treats a crash as a miss (`selftest.py:355-366`); the 72-dpi negative asserts the specific `raster_dpi` id (`selftest.py:380-382`); the edit negative now also asserts the specific code — `code == 4 and bad_codes & {E_LABEL_NOT_IN_SOURCE, E_QUOTE_NOT_FOUND}` (`selftest.py:430-433`), closing earlier observation 3 |
-| C5 | submission structure gate | PASS | `validate_skill_submission.py` → `status: ok`, 25 files, 632 083 bytes, exit 0; the five required literals (`/input/case.json`, `/app/output`, `result.json`, `case_id`, `output_contract`) are present in `SKILL.md` |
-| C6 | resource limits of the frozen contract (≤50 files, ≤500 KB each, ≤2 MB total, no symlink) | PASS | measured independently: 25 files, total 636 757 B, largest 133 942 B (`scripts/layout.py`), 0 reparse points |
+| C4 | the shipped selftest is real end-to-end and its negatives are code-based | PASS | I re-ran it: `PASS (67 passed, 0 failed, 0 unavailable, 0 vacuous skips)`, exit 0, 43.9 s (`work/verify/_selftest.out`) — including the two new assertions (draft render exits 4 with `E_MODEL_NOT_REVISED`; the bar warning escalates while `W_LONG_LABEL` stays a warning). Its negative loop asserts code intersection and treats a crash as a miss (`selftest.py:355-366`); the 72-dpi negative asserts the specific `raster_dpi` id (`selftest.py:380-382`); the edit negative now also asserts the specific code — `code == 4 and bad_codes & {E_LABEL_NOT_IN_SOURCE, E_QUOTE_NOT_FOUND}` (`selftest.py:430-433`), closing earlier observation 3 |
+| C5 | submission structure gate | PASS | `validate_skill_submission.py` → `status: ok`, 25 files, 641 114 bytes, `errors=[]`, exit 0; the five required literals (`/input/case.json`, `/app/output`, `result.json`, `case_id`, `output_contract`) are present in `SKILL.md` |
+| C6 | resource limits of the frozen contract (≤50 files, ≤500 KB each, ≤2 MB total, no symlink) | PASS | measured independently: 25 files, total 641 114 B, largest 133 942 B (`scripts/layout.py`), 0 reparse points |
 | C6b | `manifest.json`'s declared file list equals the real tree | PASS | `hash_snapshot.py` now compares them on every run: `manifest_matches_tree: true`, `manifest_listed: 25`, `manifest_missing_from_manifest: []`, `manifest_listed_but_absent: []`. This closes the stale-path defect F5. (My first ad-hoc comparison of this reported a false mismatch because of shell escaping of backslashes — the reusable check in `hash_snapshot.py` is the evidence, not that throwaway script.) |
 | C7 | no author-machine path leak, all text UTF-8 | PASS | independent scan with `(?<![A-Za-z0-9])[A-Za-z]:[\\/]`, `/Users/`, `/home/`, `AppData`, `Morrow`, `dsh-primary-runtime` over all 24 files → 0 hits; 0 non-UTF-8 files |
 | C8 | no `__pycache__`/`.pyc` in the submission tree (hard gate G6) | PASS | `hash_snapshot.py --print` → `pycache_violations: []`; the freeze/compare gate also fails hard on any `__pycache__` |
@@ -106,7 +106,7 @@ visual judgement was applied (`INDEPENDENT_LIMITS.md` §3).
 | C15 | a public GitHub link (+5 rubric) exists | UNVERIFIED (sub-fact verified) | the submission now ships `GITHUB_URL.txt` containing `https://github.com/sprw-li/scientific-editable-schematic` — **I read the file and that is verified**; whether the repo is **public and reachable** is UNVERIFIED because `web_fetch` on it timed out after 30 s in this sandbox. I am content for the three documents the Lead copied (`REVIEW.md`, `BASELINE.md`, `INDEPENDENT_LIMITS.md`) to be published there: I authored them, they contain no credentials, and they only quote local Windows paths, check ids and revision hashes. **Caveat:** they are pinned to `28535a1f…`; any later change to the bundle makes them stale, so the repo copy should keep the revision hash visible |
 | C11 | documented behaviour matches observed behaviour (draft handling, SKILL.md:56-58) | PASS | re-verified on the frozen revision: `render` warns on stderr and returns `partial`; `finish --strict` exits 3 with the draft limitation. (At the earlier revision `802ed06f…` this claim was **false** — see §4 F3b; the Lead fixed it and I re-measured.) |
 | C12 | the Skill is *better than a naive agent* on the same case | PASS | `BASELINE.md`: 7/7 vs 4/7 directed endpoints, 7/7 vs 0/7 typed, 24/24 vs 0/24 provenance, 5 vs 1 formats, 300 vs 150 dpi, correct unit/3 taxa vs stale caption, **0 vs 7 manual repairs** — while being 12.8×–120× slower (stated as a loss) |
-| C13 | docs / references / schemas / examples exist and are non-trivial | PASS (structure, and two document claims spot-checked) | `SKILL.md` with valid frontmatter `name`/`description` (`SKILL.md:1-10`); 4 references, 3 schemas, `examples/` with `case.json` + `expected_model.json` + `materials/demo_pathway.md` + `expression.csv`. In this round I read the new material: the outputs table now documents `preview/figure.png` (`SKILL.md:96`), the two-layer section 「门禁做什么、不做什么」 (`SKILL.md:164-183`) states that layer 1 proves *no unsupported assertion*, not scientific correctness, and that the judgement trail is `must_decide[] → uncertainty[] → result.json.uncertainty/limitations → change_log.entries[]`, with the sentence "逐字引文核对是溯源手段，不替代科学判断"; `references/result_contract.md:27-41` documents the explicit preview mapping and `:44` the responsibility split. Zero residual `figure03` strings remain anywhere in the tree (grep → 0) |
+| C13 | docs / references / schemas / examples exist and are non-trivial | PASS (structure, and document claims spot-checked) | `SKILL.md` with valid frontmatter `name`/`description` (`SKILL.md:1-10`); 4 references, 3 schemas, `examples/` with `case.json` + `expected_model.json` + `materials/demo_pathway.md` + `expression.csv`. Read this round: the outputs table documents `preview/figure.png` (`SKILL.md:96`); the two-layer section 「门禁做什么、不做什么」 (`SKILL.md:164-183`) states that layer 1 proves *no unsupported assertion*, not scientific correctness, names what layer 1 **can** catch (unsupported assertions, inverted direction, legend/data mismatch, truncated bar baseline, un-revised draft) and what it **cannot** (a verbatim-sourced entity that should not be in the figure — layer 2 / Agent), lists the judgement trail `must_decide[] → uncertainty[] → result.json.uncertainty/limitations → change_log.entries[]`, and keeps 「逐字引文核对是溯源手段，不替代科学判断」; `references/result_contract.md:27-44` documents the preview mapping and the responsibility split. Zero residual `figure03` strings anywhere in the tree (grep → 0) |
 | C14 | the *quality of the prose* in `references/**` is correct and complete | UNVERIFIED | I read `SKILL.md`, `manifest.json`, `result_contract.md` and the schemas in full, but I did not review `export_and_compliance.md` / `layout_and_svg.md` / `extraction_rules.md` line by line; no check exercises them |
 | C15 | a public GitHub link (+5 rubric) exists | UNVERIFIED | nothing in `work/submission/**` contains a repository URL that I can validate, and I cannot verify a public link from this sandbox; the platform claim is out of my scope |
 | C16 | the Skill loads from `/skills/weekly-skill` and the platform triggers it | UNVERIFIED | requires the official runtime; I only verified the structural frontmatter and that the CLI works from an arbitrary `--input/--work/--output` |
@@ -117,22 +117,22 @@ visual judgement was applied (`INDEPENDENT_LIMITS.md` §3).
 
 ## 3. Observations (measured facts that are not acceptance criteria)
 
-1. **The unrevised draft is source-bound, not rejected.** On the draft, case-a `render`
-   historically returned exit 0 / `status=ok` / 0 errors with all 36 draft entities bound
-   (46/46 elements, 0 unsupported) — the provenance gate cannot distinguish a verbatim-token
-   draft (entities named `Fixture`, `GOLD`, `Every`, `Core`, `In`) from a revised model, because
-   every token really is in the markdown source. The revision *requirement* is now enforced at
-   the stage boundary (`status=partial`, `strict` exit 3), but the *content* of the revision is
-   still unverifiable by the gate. This is inherent to a provenance-only check and worth stating
-   in the final report rather than hiding.
-2. **[CLOSED at `28535a1f…`] `set_value`/`set_number` did not exist.** Previously `_ALLOWED_OPS`
+1. **The unrevised draft is source-bound, and is now an error-class condition.** On the draft,
+   case-a `render` returns **exit 4 / `status=partial` / `E_MODEL_NOT_REVISED`** (measured this
+   round; at revision `802ed06f…` it returned exit 0 / `status=ok` / 0 errors). The remaining
+   limitation is about *content*, not process: the draft's 36 entities are all verbatim source
+   tokens (`Fixture`, `GOLD`, `Every`, `Core`, `In`), so the provenance gate cannot tell a
+   token-salad draft from a revised model — only `REVIEW_BATCH.must_decide[]` asks for judgement.
+   This is inherent to a provenance-only check and is now stated in `SKILL.md`'s two-layer table
+   rather than implied.
+2. **[CLOSED — `28535a1f…`, re-confirmed at `2ec1a519…`] `set_value`/`set_number` did not exist.** Previously `_ALLOWED_OPS`
    had no op that writes `entities[].value`, so a data correction left the entity's own number
    stale while the plotted series changed. `run.py:544` now lists `set_value` and `set_number`, and
    `run.py:552` maps both to the `value` field, so an edit can update the number directly.
    Re-open if a future revision drops them; my case-c ops file was written against the old set and
    still passes, so I have **not** re-exercised the new ops end-to-end — the mapping is verified by
    reading `run.py:544-552`, and a dedicated case-c op using `set_value` is the obvious next test.
-3. **[CLOSED at `28535a1f…`] `selftest.py` asserted only an exit code** for the "edit introducing
+3. **[CLOSED — `28535a1f…`, re-confirmed at `2ec1a519…`] `selftest.py` asserted only an exit code** for the "edit introducing
    an unverifiable label" negative. It now asserts `code == 4 and bad_codes &
    {E_LABEL_NOT_IN_SOURCE, E_QUOTE_NOT_FOUND}` (`selftest.py:430-433`), which satisfies the
    specific-code rule. Verified by reading the file and by the selftest's own PASS. The comment in
@@ -155,7 +155,7 @@ visual judgement was applied (`INDEPENDENT_LIMITS.md` §3).
    a model/rendering mismatch would be caught; conversely a defect that exists only in the model
    JSON and is never drawn (e.g. a stale `entities[].value`) is outside these checks — which is
    why observation 2 is reported as an observation.
-8. **[CLOSED at `28535a1f…`, with a nuance] Chart locator semantics.** The axis element now binds
+8. **[CLOSED — `28535a1f…`, re-confirmed at `2ec1a519…`, with a nuance] Chart locator semantics.** The axis element now binds
    to the canonical column: `axes:figure05` → `materials/iris_measurements.csv#table:petal_length_cm`
    (kind `derived`), and the locator form is validated on both sides — `layout.LOCATOR_RE`
    (`layout.py:294-300`) and `compliance.py:737-744` / `:806 locator_form_report`, with the
@@ -172,6 +172,15 @@ visual judgement was applied (`INDEPENDENT_LIMITS.md` §3).
    spot-verified the rule myself on one element per side (the axis above is `table:<column>` and
    form-valid; the malformed-locator path is the one `N20`/`locator_form_report` exercises). Treat
    their six-fixture agreement as a **cross-check, not as my evidence**.
+10. **`E_BAR_BASELINE_TRUNCATED` is currently unreachable end-to-end — by design.** For a
+    category-axis bar chart `layout.py:1968-1969` now forces `lo = min(0.0, lo)`, so `_nice_ticks`
+    cannot return `ymin > 0` and the warning never fires on a conforming model; I could not
+    construct an end-to-end repro, and the escalation is therefore a defensive second layer whose
+    only evidence is the direct probe in `B16`. That is the *stronger* outcome (the numbers are
+    made correct rather than reported), but a reviewer should know the guard is untriggered in
+    normal operation: if a future change removes the forced-zero domain, the promotion is what
+    keeps a truncated chart out of `status=ok`. My `OBS_B08` check is the one that would notice the
+    forced-zero regression from the artifact side.
 
 ## 4. Defects found during this task, and their resolution
 
@@ -182,17 +191,19 @@ visual judgement was applied (`INDEPENDENT_LIMITS.md` §3).
 | F3a | the case-c fixture could not pass the Skill's own gate: `E_QUOTE_NOT_FOUND` ×3 (backticks in `iris_source_note.md#L15` are kept by `ingest.normalise_text`, `ingest.py:107-109`) and `E_PROVENANCE_MISSING` (caption `kind:"derived"` without `derived_from[]`, `model.py:117-120`) | high **for the fixture** (case unsolvable) | **FIXED IN MY OWN SCOPE** (`work/fixtures/case-c-edit/before/figure_model.json`, documented in `GOLD.md` §C.3). I never touched `work/submission/**`. After the fix: `edit` exit 0, `status=ok`, `finish --strict` exit 0 |
 | F3b | documented draft handling did not hold: at revision `802ed06f…`, `render` of the unrevised draft returned `status=ok`, exit 0, 0 errors, and `finish` left `status=ok` with only a limitation line — contradicting `SKILL.md:56-58` | medium (honesty / reliability) | **REPORTED → FIXED → RE-VERIFIED PASS** (`run.py:441-443`, `run.py:853`, `run.py:859-860`) |
 | F5 | `manifest.json` named `examples/materials/figure03.md`, a path that no longer existed after the rename, and omitted the real `examples/materials/demo_pathway.md` — a false statement inside the deliverable | medium (documentation truthfulness) | **FOUND BY `implementation-comparator`, FIXED BY THE LEAD → VERIFIED BY ME.** `hash_snapshot.py` now compares the manifest against the tree on every run; on the frozen tree `manifest_matches_tree: true` with 25/25 paths, no missing, no unlisted. This check is now part of the anti-drift gate, so the class of defect cannot recur silently |
+| F6 | a chart that misstates its numbers (truncated bar baseline) could still reach `status=ok`, because `W_BAR_BASELINE_TRUNCATED` was only a warning; likewise the unrevised draft was only a soft downgrade | high (a "this figure misstates the data" diagnostic is not advice) | **FOUND BY `concept-substance-reviewer`, FIXED BY THE LEAD → VERIFIED BY ME.** Prevention: bar charts force the value domain to include 0 (`layout.py:1968-1969`), verified from the artifact (`OBS_B08`: ticks 0,2,4,6; height ratio == data ratio). Escalation: `run.py:205-216` + `:358` promotes it to `E_BAR_BASELINE_TRUNCATED` (probe in `B16`); the draft path now raises `E_MODEL_NOT_REVISED` (end-to-end: exit 4, `B15`). The corresponding `SKILL.md` table now scopes what layer 1 can and cannot catch, which is the honest alternative to over-claiming |
 
 No other FAIL was observed in the executed suites. Three defects (F1, F2, F3b) were also
 reported to the Lead with file:line and a one-line repro at the milestones; F3a was fixed by me
 inside my own write scope.
 
-**Final re-verification:** all fixes were re-measured on the frozen tree `6ebab3c2…` — F1 by
+**Final re-verification:** all fixes were re-measured on the frozen tree `2ec1a519…` — F1 by
 recomputing the self digest (`P11b`, `C15`, and the examples run), F2 by the SVG/`source_map.json`
 agreement check plus the canonical `table:petal_length_cm` axis locator, F3b by the draft render
-returning `partial` and `finish --strict` exiting 3, F5 by the manifest-vs-tree equality check.
-No FAIL remains in `harness.py run` (70 PASS / 0 FAIL / 0 UNVERIFIED) and none in
-`harness.py negative` (20/20 detected, `vacuous_skips=[]`).
+returning `partial` with `E_MODEL_NOT_REVISED` (now exit 4) and `finish --strict` exiting 3, F5 by
+the manifest-vs-tree equality check, F6 by the blocking-warning probe (`B16`). No FAIL remains in
+`harness.py run` (70 PASS / 0 FAIL / 0 UNVERIFIED) and none in `harness.py negative`
+(20/20 detected, `vacuous_skips=[]`).
 
 ## 5. Could not verify (summary; details in `INDEPENDENT_LIMITS.md`)
 
@@ -218,7 +229,7 @@ confirm. **I confirm: I am content for those three files to be published there.*
 work for `task-4`; they contain no credentials, no tokens and no third-party material; they quote
 only local Windows paths, check ids, codes and revision hashes. Two requests for the published
 copy: (i) keep the revision hash
-`6ebab3c237a0d9986a92ea122baa333d79fe0eda87d11bc69c6953cf4b31b84d` visible next to them, because
+`2ec1a519aa7fad72e4920ff1dd6aa36e2eff186736e9364dea4bd43aee0a30a9` visible next to them, because
 they are hash-pinned and go stale the moment the bundle changes; (ii) do not publish
 `work/verify/runs/**` or `work/verify/negative/**` as "evidence" without the corresponding bundle,
 since they are only meaningful alongside that revision.
@@ -233,11 +244,11 @@ py -3 work\verify\harness.py run                    # 70 PASS / 0 FAIL  (exit 0)
 py -3 work\verify\harness.py negative               # 20/20 detected, 0 vacuous (exit 0)
 py -3 work\verify\harness.py report                 # re-print the summary
 py -3 work\verify\baseline_run.py --cases case-a,case-b
-py -3 work\submission\scripts\selftest.py           # PASS 65 passed / 0 failed
+py -3 work\submission\scripts\selftest.py           # PASS 67 passed / 0 failed
 ```
 
 Expected tree for these numbers:
-`6ebab3c237a0d9986a92ea122baa333d79fe0eda87d11bc69c6953cf4b31b84d` (25 files, 636 757 B).
+`2ec1a519aa7fad72e4920ff1dd6aa36e2eff186736e9364dea4bd43aee0a30a9` (25 files, 641 114 B).
 
 Raw evidence is kept under `work/verify/`: `harness_results.json` (all checks, with evidence
 objects), `baseline_results.json`, `_neg.out`, `_run.out`, `_base.out`, `_selftest.out`,
