@@ -45,7 +45,7 @@ possible baseline (see §4).
 | raster dpi | 150.0 | 300.0 | +150 |
 | artifact formats | `png` (1) | `svg,pdf,png,tiff,eps` (5) | +4 |
 | compliance failures (16-id gate) | gate not run | 0 | — |
-| wall-clock seconds | **3.66** | **22.19** | Skill is ~6× slower (see §3) |
+| wall-clock seconds | **0.78** | **11.02** | Skill is ~14× slower (see §3) |
 | manual repair steps | 7 | **0** | −7 |
 
 ### Case B — data-driven chart (`case-b-chart`)
@@ -61,7 +61,7 @@ possible baseline (see §4).
 | editable text layer | no | yes | — |
 | raster dpi | 150.0 | 300.0 | +150 |
 | artifact formats | `png` (1) | `svg,pdf,png,tiff,eps` (5) | +4 |
-| wall-clock seconds | **0.21** | **14.66** | Skill is ~70× slower (see §3) |
+| wall-clock seconds | **0.07** | **6.78** | Skill is ~100× slower (see §3) |
 | manual repair steps | 7 | **0** | −7 |
 
 **Manual repair steps** is defined as *the number of checklist items a human must fix to reach
@@ -81,16 +81,19 @@ the gold figure*, enumerated by the tool (the list is printed and stored in
 * The Skill wins every *quality* metric on both cases: provenance 0 → 100 %, direction typing
   0/7 → 7/7, legend/unit honesty, editable text, 5 export formats, 300 dpi, and 7 fewer manual
   repairs on both fixtures. At the frozen revision the Skill needs **0** manual repairs.
-* **The Skill loses the wall-clock metric**, by roughly 6× (case A) and ~70× (case B) on the last
+* **The Skill loses the wall-clock metric**, by roughly 14× (case A) and ~100× (case B) on the last
   measured pair. The baseline is a single pass with no validation, no rendering back-end and no
   export matrix; the Skill pays for the gates, the layered SVG and five formats. Within the task's
   900 s budget the absolute cost is small, but it is a real loss and is stated rather than hidden.
-  Both arms were timed once on a loaded machine (several agents were running suites); the Skill
-  ranged **8.4 s – 22.2 s** for case A and the baseline **1.7 s – 3.7 s** across runs, so treat the
-  multiplier as "an order of magnitude", not a precise figure. The case-B baseline (~0.2 s) was
-  stable.
+  Both arms were timed once on a shared machine (several agents were running suites); across the
+  five measurement rounds the Skill ranged **6.8 s – 34.4 s** per case and the baseline
+  **0.07 s – 3.7 s**, so treat the multiplier as "one to two orders of magnitude", not a precise
+  figure.
 * The Skill needs **0** manual repairs on both fixtures at the code-verified revision
-  (`tree_sha256 95271984…`); the naive baseline needs **7** on each.
+  (`tree_sha256 6ebab3c237a0d9986a92ea122baa333d79fe0eda87d11bc69c6953cf4b31b84d`); the naive
+  baseline needs **7** on each. The last revision change was documentation/metadata only
+  (`manifest.json`, `SKILL.md`, `references/result_contract.md`), so these comparison numbers were
+  not recomputed against different code.
 * Case B's Skill side wins the trap that the baseline falls into (the stale caption): the
   baseline reproduces "mm" and two taxa, which is exactly the failure the fixture was built to
   catch. That is a *fixture-specific* gain; it does not prove the Skill would beat a baseline on

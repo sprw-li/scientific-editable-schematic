@@ -24,6 +24,37 @@
 | `checks` | object | `export_ok`、逐项 `export_checks`、`model_errors`、`model_warnings`、`formats_ok`、`formats_unavailable` |
 | `audit` | object | `skill`、`skill_path`、`stage`、`written_utc`、`model_file_used`、`model_sha256`、`output_dir`、`work_dir`、`deterministic` |
 
+## 预览件（inspection previews）
+
+运行契约要求 "Editable Office/slide/diagram outputs should also have real rendered PDF/PNG
+previews for inspection"。本 Skill 的映射是**显式**的，不靠目录名暗示：
+
+| 角色 | 路径 | 谁生成 |
+|---|---|---|
+| 可编辑主源（真身） | `figures/<stem>.svg` | `render` |
+| 目标导出件 | `figures/<stem>.{pdf,png,tiff,eps}` | `export`（后端的真实版本记在 `export_report.json.tools`） |
+| **供检查的预览** | `preview/<stem>.png` + `preview/README.md` | `export`/`edit` 末尾的 `_write_previews`，逐字节复制该次导出的 PNG |
+| 预览的机检结论 | `checks.json` | `compliance.check_artifacts` |
+
+`preview/` 是**同一张图的副本**，不是另一种渲染路径：`preview/<stem>.png` 与该次导出的
+`figures/<stem>.png` 字节相同（可用 sha256 核对）。若本次运行没有产出 PNG（后端缺失），
+`preview/` 不会出现，且该格式在 `export_report.json` 里是 `unavailable` 并附真实原因——
+**不会**用 SVG 改名或写占位文件来充当预览。
+
+## 两层责任：门禁核验 vs 科学判断
+
+`result.json` 只承载**可核验性**那一层，不冒充科学正确性：
+
+| 层 | 谁负责 | 落在哪些字段 |
+|---|---|---|
+| 机械可核验性（元素→逐字来源、方向语义、图例-数据一致、版式、导出合规） | 本 Skill，可执行、有错误码 | `checks.*`、`artifacts[].sha256`、`sources[]`、以及 `/app/work/figure_issues.json` 的 `E_*` 码 |
+| 科学判断（实体身份、该不该入图、来源冲突时以谁为准） | Agent / LLM Judge | `uncertainty[]`、`limitations[]`，上游是 `figure_model.json` 的 `uncertainty[]` 与 `REVIEW_BATCH.json` 的 `must_decide[]`，人工改动记在 `change_log.json` |
+
+因此 `E_QUOTE_NOT_FOUND` / `E_LABEL_NOT_IN_SOURCE` 的含义是"**该断言无来源支持**"，
+不是"该论断科学上正确"；反之，门禁全绿也**不**等于科学结论成立。**逐字引文核对是溯源手段，
+不替代科学判断**（组织方修订原文：*scientific judgement remains native/LLM Judge, not a
+literal quote or export pass*）。材料自相矛盾时写入 `uncertainty` 并降级 `status`，不要硬编。
+
 ## 三种状态的判定（冻结）
 
 ```

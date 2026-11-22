@@ -2,12 +2,21 @@
   "skills": [
     {
       "name": "scientific-editable-schematic",
-      "version": "1.0",
+      "version": "1.1",
       "detection": "explicit",
       "runtime": {
         "input": "/input/case.json",
+        "work": "/app/work",
         "output": "/app/output",
-        "result": "/app/output/result.json"
+        "result": "/app/output/result.json",
+        "entrypoint": "scripts/run.py",
+        "commands": [
+          "prepare",
+          "render",
+          "export",
+          "edit",
+          "finish"
+        ]
       },
       "files": [
         "GITHUB_URL.txt",
@@ -16,8 +25,8 @@
         "examples/README.md",
         "examples/case.json",
         "examples/expected_model.json",
+        "examples/materials/demo_pathway.md",
         "examples/materials/expression.csv",
-        "examples/materials/figure03.md",
         "manifest.json",
         "references/export_and_compliance.md",
         "references/extraction_rules.md",
@@ -38,5 +47,6 @@
       ],
       "github": "https://github.com/sprw-li/scientific-editable-schematic"
     }
-  ]
+  ],
+  "generated_from": "actual file tree; every listed path exists"
 }

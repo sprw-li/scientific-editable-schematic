@@ -93,6 +93,7 @@ python "$SKILL/scripts/run.py" edit --work /app/work --output /app/output \
 | `figure_model.json` | **可继续编辑的源文件**（实体/关系/图例/数据/溯源，见 `schemas/figure_model.schema.json`） |
 | `figures/figure.svg` | **主源文件**：7 个命名图层、文字为真 `<text>`、每个元素带 `id` 与 `data-prov` |
 | `figures/figure.pdf` `.png` `.tiff` `.eps` | 目标导出件（真实生成；不可用的格式如实标 `unavailable`） |
+| `preview/figure.png` (+`preview/README.md`) | **供人工检查的渲染预览**：运行契约要求"real rendered PDF/PNG previews for inspection"，导出件在 `figures/`，这里再放一份同名 PNG 副本并以 `preview/README.md` 说明，避免评审去猜哪个文件是预览 |
 | `source_map.json` | 每个图面元素 → 来源 `{path,locator,quote}` 或显式 `unsupported` |
 | `change_log.json` | 来源保留式编辑的 before/after、理由与来源引用 |
 | `export_report.json` / `checks.json` | 导出的真实后端、版本、DPI、字体与逐项合规检查 |
@@ -159,6 +160,29 @@ examples/                 最小调用示例（**示例**，非正式案例答�
 ```bash
 python "$SKILL/scripts/selftest.py"        # 退出码 0 才算通过（含真实渲染与导出，非跳过）
 ```
+
+## 门禁做什么、不做什么（两层，别混）
+
+**第一层——机械可核验性（本 Skill 负责，可执行、有错误码）**：图里每个元素是否指得回一条逐字来源、
+关系方向是否与来源动词一致、图例与数据是否逐项对应、版式是否自洽、导出件是否满足期刊参数。
+这一层只能证明"**没有无依据的断言**"，**不能**证明科学结论正确。
+
+**第二层——科学判断（Agent / LLM Judge 负责，不入本 Skill 的错误码）**：实体身份是否成立、
+该不该把这个过程画进机制链条、来源之间自相矛盾时以哪个为准。
+这一层按如下路径**留痕**，而不是被门禁替代：
+
+| 判断发生在 | 记录在哪 | 谁可复核 |
+|---|---|---|
+| `prepare` 之后 | `REVIEW_BATCH.json` 的 `must_decide[]`（问题 + 依据 + 默认值，≤12 条） | 任何人读该文件 |
+| `draft_model` 的每个猜测 | `figure_model.draft.json` 的 `uncertainty[]` | 同上 |
+| Agent 的最终裁决 | Agent 自己写的 `figure_model.json`（它的 `uncertainty[]` 与每个元素的 `source.kind: explicit\|derived`） | `validate_model` 会重新核对引文 |
+| Agent 对最终结果的不确定性 | `result.json` 的 `uncertainty[]` / `limitations[]` | 任何人读该文件 |
+| 人工确认的修改 | `change_log.json` 的 `entries[]`（op / before / after / reason / source_refs） | 逐条 diff |
+
+因此 `E_QUOTE_NOT_FOUND`、`E_LABEL_NOT_IN_SOURCE` 这类**阻断**的含义是"这个断言没有来源支持"，
+**不是**"这个论断科学上正确"。**逐字引文核对是溯源手段，不替代科学判断**；组织方修订也明确
+"scientific judgement remains native/LLM Judge"。材料自相矛盾时，正确做法是写入 `uncertainty`
+并让 `status` 降级，而不是在两层之间选一个硬编。
 
 ## 边界与诚实性
 
