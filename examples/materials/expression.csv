@@ -1,0 +1,7 @@
+group,gene,fold_change
+Vehicle,BCL2,1.00
+2-APB,BCL2,0.42
+Vehicle,CASP3,1.00
+2-APB,CASP3,2.31
+Vehicle,TRPM7,1.00
+2-APB,TRPM7,0.55

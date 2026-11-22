@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "edit_ops",
+  "description": "Source-preserving edit operations applied to figure_model.json. Frozen interface v1.0 (work/CONTRACT.md). Applied by `run.py edit`; the model is the single source of truth, so an edit is a model patch plus a redraw, never an SVG post-processing hack.",
+  "type": "object",
+  "required": ["ops"],
+  "additionalProperties": false,
+  "properties": {
+    "case_id": {"type": "string"},
+    "note": {"type": "string"},
+    "ops": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["op"],
+        "additionalProperties": true,
+        "properties": {
+          "op": {"enum": ["rename_label", "set_label", "set_color", "set_attribute",
+                          "set_unit", "update_data", "add_entity", "remove_entity",
+                          "add_relation", "remove_relation", "set_style"]},
+          "target": {"type": "string", "description": "ent:<id> | rel:<id> | lg:<id> | cont:<id> | dotted.path (e.g. figure.title.text, data.units.fold_change)"},
+          "value": {"description": "New value. For add_entity/add_relation an object with at least an id."},
+          "reason": {"type": "string"},
+          "source_refs": {
+            "type": "array",
+            "description": "Why the new value is scientifically justified; required in spirit for any label/number change.",
+            "items": {"type": "object", "properties": {
+              "path": {"type": "string"}, "locator": {"type": "string"}, "quote": {"type": "string"}}}
+          }
+        }
+      }
+    }
+  },
+  "$comment": "Allowed targets: rename_label/set_label/set_color/set_style/set_unit/set_attribute accept ent:/rel:/lg:/cont:/dotted paths; remove_entity/remove_relation accept the element target only. update_data replaces model.data fields (e.g. value={'series': [...], 'rows': [...]}); after any edit the whole model is re-validated, so an edit that introduces an unverifiable label or a legend/data mismatch fails the gate instead of silently shipping."
+}

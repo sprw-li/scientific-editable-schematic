@@ -1,0 +1,127 @@
+{
+  "_comment": "示例模型（**示意**，非正式案例答案）。它演示 schemas/figure_model.schema.json 的完整形状与溯源绑定方式；quote 均可在 examples/materials/demo_pathway.md 的对应行逐字找到。",
+  "schema_version": "1.0",
+  "case_id": "example-relationship-schematic",
+  "figure": {
+    "id": "demo-figure",
+    "kind": "relationship_schematic",
+    "title": {
+      "text": "OGD/R 下 TRPM7–CAMK2–CREB–BCL2 通路与 SIRT1 负反馈",
+      "source": {"path": "materials/demo_pathway.md", "locator": "L8", "kind": "derived",
+                 "quote": "受体 TRPM7 被氧糖剥夺激活", "derived_from": ["L8", "L9", "L10", "L11"]}
+    },
+    "canvas": {"width_mm": 180, "height_mm": 120, "background": "#FFFFFF"},
+    "style": {
+      "font_stack": ["DejaVu Sans", "Liberation Sans", "Arial"],
+      "color_space": "RGB",
+      "font_sizes_pt": {"panel": 9, "label": 7, "title": 9, "legend": 7},
+      "line_widths_pt": {"edge": 0.8, "node": 0.6, "axis": 0.6},
+      "palette": ["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#56B4E9"]
+    }
+  },
+  "entities": [
+    {"id": "e_trpm7", "label": "TRPM7", "kind": "protein", "container": "c_membrane",
+     "source": {"path": "materials/demo_pathway.md", "locator": "L8", "kind": "explicit",
+                "quote": "受体 TRPM7 被氧糖剥夺激活"}},
+    {"id": "e_sirt1", "label": "SIRT1", "kind": "protein", "container": "c_membrane",
+     "source": {"path": "materials/demo_pathway.md", "locator": "L11", "kind": "explicit",
+                "quote": "SIRT1 去乙酰化并抑制 TRPM7 的表达"}},
+    {"id": "e_camk2", "label": "CAMK2", "kind": "protein", "container": "c_intracellular",
+     "source": {"path": "materials/demo_pathway.md", "locator": "L8", "kind": "explicit",
+                "quote": "激活下游激酶 CAMK2"}},
+    {"id": "e_creb", "label": "CREB", "kind": "protein", "container": "c_intracellular",
+     "source": {"path": "materials/demo_pathway.md", "locator": "L9", "kind": "explicit",
+                "quote": "CAMK2 磷酸化并激活转录因子 CREB"}},
+    {"id": "e_bcl2", "label": "BCL2", "kind": "gene", "container": "c_intracellular",
+     "source": {"path": "materials/demo_pathway.md", "locator": "L10", "kind": "explicit",
+                "quote": "活化的 CREB 促进 BCL2 转录"}},
+    {"id": "e_casp3", "label": "CASP3", "kind": "process", "container": "c_intracellular",
+     "source": {"path": "materials/demo_pathway.md", "locator": "L10", "kind": "explicit",
+                "quote": "抑制细胞凋亡执行因子 CASP3"}},
+    {"id": "e_2apb", "label": "2-APB", "kind": "treatment", "container": null,
+     "source": {"path": "materials/demo_pathway.md", "locator": "L19", "kind": "explicit",
+                "quote": "抑制剂 2-APB 处理组记为 2-APB"}},
+    {"id": "e_vehicle", "label": "Vehicle", "kind": "treatment", "container": null,
+     "source": {"path": "materials/demo_pathway.md", "locator": "L19", "kind": "explicit",
+                "quote": "溶剂对照记为 Vehicle"}}
+  ],
+  "relations": [
+    {"id": "r_trpm7_camk2", "from": "e_trpm7", "to": "e_camk2", "type": "activation",
+     "direction": "forward", "label": "激活",
+     "style": {"stroke": "solid", "arrow": "normal", "color": "#0072B2"},
+     "source": {"path": "materials/demo_pathway.md", "locator": "L8", "kind": "explicit",
+                "quote": "进而激活下游激酶 CAMK2"}},
+    {"id": "r_camk2_creb", "from": "e_camk2", "to": "e_creb", "type": "activation",
+     "direction": "forward", "label": "激活",
+     "style": {"stroke": "solid", "arrow": "normal", "color": "#0072B2"},
+     "source": {"path": "materials/demo_pathway.md", "locator": "L9", "kind": "explicit",
+                "quote": "CAMK2 磷酸化并激活转录因子 CREB"}},
+    {"id": "r_creb_bcl2", "from": "e_creb", "to": "e_bcl2", "type": "activation",
+     "direction": "forward", "label": "促进转录",
+     "style": {"stroke": "solid", "arrow": "normal", "color": "#0072B2"},
+     "source": {"path": "materials/demo_pathway.md", "locator": "L10", "kind": "explicit",
+                "quote": "活化的 CREB 促进 BCL2 转录"}},
+    {"id": "r_bcl2_casp3", "from": "e_bcl2", "to": "e_casp3", "type": "inhibition",
+     "direction": "forward", "label": "抑制",
+     "style": {"stroke": "solid", "arrow": "tee", "color": "#D55E00"},
+     "source": {"path": "materials/demo_pathway.md", "locator": "L10", "kind": "explicit",
+                "quote": "抑制细胞凋亡执行因子 CASP3"}},
+    {"id": "r_sirt1_trpm7", "from": "e_sirt1", "to": "e_trpm7", "type": "inhibition",
+     "direction": "forward", "label": "抑制",
+     "style": {"stroke": "solid", "arrow": "tee", "color": "#D55E00"},
+     "source": {"path": "materials/demo_pathway.md", "locator": "L11", "kind": "explicit",
+                "quote": "SIRT1 去乙酰化并抑制 TRPM7 的表达"}}
+  ],
+  "containers": [
+    {"id": "c_membrane", "label": "膜受体模块", "members": ["e_trpm7", "e_sirt1"],
+     "source": {"path": "materials/demo_pathway.md", "locator": "L15", "kind": "explicit",
+                "quote": "膜受体模块包含 TRPM7 与 SIRT1"}},
+    {"id": "c_intracellular", "label": "胞内信号模块", "members": ["e_camk2", "e_creb", "e_bcl2", "e_casp3"],
+     "source": {"path": "materials/demo_pathway.md", "locator": "L15", "kind": "explicit",
+                "quote": "胞内信号模块包含 CAMK2、CREB、BCL2 与 CASP3"}}
+  ],
+  "legend": [
+    {"id": "lg_activation", "label": "激活（实线箭头）", "kind": "line_style", "value": "activation",
+     "color": "#0072B2", "marker": "arrow:normal",
+     "source": {"path": "materials/demo_pathway.md", "locator": "L8", "kind": "explicit", "quote": "激活下游激酶 CAMK2"}},
+    {"id": "lg_inhibition", "label": "抑制（平头线）", "kind": "line_style", "value": "inhibition",
+     "color": "#D55E00", "marker": "arrow:tee",
+     "source": {"path": "materials/demo_pathway.md", "locator": "L11", "kind": "explicit", "quote": "抑制 TRPM7 的表达"}},
+    {"id": "lg_2apb", "label": "2-APB（抑制剂组）", "kind": "category", "value": "2-APB",
+     "color": "#009E73", "marker": "square",
+     "source": {"path": "materials/expression.csv", "locator": "table:group", "kind": "explicit", "quote": "2-APB"}},
+    {"id": "lg_vehicle", "label": "Vehicle（溶剂对照）", "kind": "category", "value": "Vehicle",
+     "color": "#CC79A7", "marker": "circle",
+     "source": {"path": "materials/expression.csv", "locator": "table:group", "kind": "explicit", "quote": "Vehicle"}}
+  ],
+  "data": {
+    "path": "materials/expression.csv",
+    "sha256": null,
+    "columns": ["group", "gene", "fold_change"],
+    "units": {"fold_change": "fold change"},
+    "rows": [
+      ["Vehicle", "BCL2", "1.00"], ["2-APB", "BCL2", "0.42"],
+      ["Vehicle", "CASP3", "1.00"], ["2-APB", "CASP3", "2.31"],
+      ["Vehicle", "TRPM7", "1.00"], ["2-APB", "TRPM7", "0.55"]
+    ],
+    "series": [
+      {"name": "Vehicle", "x": ["BCL2", "CASP3", "TRPM7"], "y": [1.00, 1.00, 1.00],
+       "unit": "fold change", "color": "#CC79A7"},
+      {"name": "2-APB", "x": ["BCL2", "CASP3", "TRPM7"], "y": [0.42, 2.31, 0.55],
+       "unit": "fold change", "color": "#009E73"}
+    ]
+  },
+  "panels": [{"id": "A", "caption": {"text": "通路关系示意", "source": {"path": "materials/demo_pathway.md", "locator": "L6", "kind": "explicit", "quote": "通路结构"}}}],
+  "uncertainty": [
+    {"where": "figure.title", "issue": "标题由多条来源综合得出，非来源逐字原句", "action": "标为 derived 并列出 derived_from"}
+  ],
+  "provenance": {
+    "generated_by": "scientific-editable-schematic/example",
+    "created_utc": "2026-01-01T00:00:00Z",
+    "model_version": "1.0",
+    "source_files": [
+      {"path": "materials/demo_pathway.md", "sha256": null},
+      {"path": "materials/expression.csv", "sha256": null}
+    ]
+  }
+}

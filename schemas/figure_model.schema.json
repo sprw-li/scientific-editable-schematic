@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "figure_model",
+  "description": "Source-bound, editable scientific figure model. Frozen interface v1.0 (see work/CONTRACT.md section 4.7).",
+  "type": "object",
+  "required": ["schema_version", "case_id", "figure", "entities", "relations", "containers", "legend", "provenance"],
+  "additionalProperties": true,
+  "definitions": {
+    "source": {
+      "type": "object",
+      "description": "Provenance binding. quote must occur verbatim (whitespace-normalised) in the referenced source unit.",
+      "required": ["path", "locator", "kind"],
+      "properties": {
+        "path": {"type": "string", "description": "POSIX path relative to the input root"},
+        "locator": {"type": "string", "description": "L12 | L12-L18 | p3 | table:col | fig:1"},
+        "quote": {"type": "string"},
+        "kind": {"enum": ["explicit", "derived", "unsupported"]},
+        "derived_from": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "layout_hint": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "level": {"type": "integer"},
+        "order": {"type": "integer"},
+        "group": {"type": "string"}
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "case_id": {"type": "string"},
+    "figure": {
+      "type": "object",
+      "required": ["id", "kind", "canvas"],
+      "properties": {
+        "id": {"type": "string"},
+        "kind": {"enum": ["relationship_schematic", "chart", "flowchart", "mixed"]},
+        "title": {"type": "object", "properties": {"text": {"type": "string"}, "source": {"$ref": "#/definitions/source"}}},
+        "canvas": {
+          "type": "object",
+          "required": ["width_mm", "height_mm"],
+          "properties": {
+            "width_mm": {"type": "number", "exclusiveMinimum": 0},
+            "height_mm": {"type": "number", "exclusiveMinimum": 0},
+            "background": {"type": "string"}
+          }
+        },
+        "style": {
+          "type": "object",
+          "properties": {
+            "font_stack": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+            "color_space": {"enum": ["RGB", "CMYK"]},
+            "font_sizes_pt": {"type": "object", "additionalProperties": {"type": "number"}},
+            "line_widths_pt": {"type": "object", "additionalProperties": {"type": "number"}},
+            "palette": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "kind", "source"],
+        "properties": {
+          "id": {"type": "string"},
+          "label": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["gene", "protein", "process", "treatment", "sample", "category", "axis", "concept", "compound", "cell", "condition"]},
+          "container": {"type": ["string", "null"]},
+          "attributes": {"type": "object"},
+          "value": {"type": ["number", "string", "null"]},
+          "unit": {"type": ["string", "null"]},
+          "layout": {"$ref": "#/definitions/layout_hint"},
+          "source": {"$ref": "#/definitions/source"}
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "from", "to", "type", "direction", "source"],
+        "properties": {
+          "id": {"type": "string"},
+          "from": {"type": "string"},
+          "to": {"type": "string"},
+          "type": {"enum": ["activation", "inhibition", "containment", "sequence", "causation", "association", "membership"]},
+          "direction": {"enum": ["forward", "bidirectional", "none"]},
+          "label": {"type": "string"},
+          "style": {
+            "type": "object",
+            "properties": {
+              "stroke": {"enum": ["solid", "dashed", "dotted"]},
+              "arrow": {"enum": ["normal", "tee", "none"]},
+              "color": {"type": "string"}
+            }
+          },
+          "source": {"$ref": "#/definitions/source"}
+        }
+      }
+    },
+    "containers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "members", "source"],
+        "properties": {
+          "id": {"type": "string"},
+          "label": {"type": "string"},
+          "members": {"type": "array", "items": {"type": "string"}},
+          "layout": {"$ref": "#/definitions/layout_hint"},
+          "source": {"$ref": "#/definitions/source"}
+        }
+      }
+    },
+    "legend": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "kind", "source"],
+        "properties": {
+          "id": {"type": "string"},
+          "label": {"type": "string"},
+          "kind": {"enum": ["category", "marker", "line_style", "value_scale"]},
+          "value": {"type": ["string", "number", "null"]},
+          "color": {"type": ["string", "null"]},
+          "marker": {"type": ["string", "null"]},
+          "source": {"$ref": "#/definitions/source"}
+        }
+      }
+    },
+    "data": {
+      "type": ["object", "null"],
+      "properties": {
+        "path": {"type": ["string", "null"]},
+        "sha256": {"type": ["string", "null"]},
+        "columns": {"type": "array", "items": {"type": "string"}},
+        "units": {"type": "object"},
+        "rows": {"type": "array", "items": {"type": "array"}},
+        "series": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "panels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": {"type": "string"},
+          "caption": {"type": "object"},
+          "layout": {"$ref": "#/definitions/layout_hint"}
+        }
+      }
+    },
+    "uncertainty": {"type": "array", "items": {"type": "object"}},
+    "provenance": {
+      "type": "object",
+      "required": ["generated_by", "source_files"],
+      "properties": {
+        "generated_by": {"type": "string"},
+        "created_utc": {"type": "string"},
+        "model_version": {"type": "string"},
+        "source_files": {"type": "array", "items": {"type": "object", "required": ["path", "sha256"]}}
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "REVIEW_BATCH",
+  "description": "Single-file handoff from `run.py prepare` to the agent, mirroring the bounded-handoff pattern used by the other skill tasks in this contest. It carries everything the agent needs to make the scientific judgement calls, without dumping the whole input tree.",
+  "type": "object",
+  "required": ["case_id", "task_text", "output_contract", "materials", "draft_summary", "must_decide", "instructions"],
+  "properties": {
+    "case_id": {"type": "string"},
+    "task_text": {"type": "string", "description": "Bounded task description (<= 6000 chars)."},
+    "output_contract": {"type": "object"},
+    "required_fields": {"type": "array", "items": {"type": "string"}},
+    "materials": {
+      "type": "array",
+      "items": {"type": "object", "properties": {
+        "path": {"type": "string"}, "kind": {"type": "string"},
+        "role": {"enum": ["material", "metadata"]},
+        "sha256": {"type": "string"}, "bytes": {"type": "integer"},
+        "excerpt": {"type": "string", "description": "Bounded excerpt (<=600 chars each)."}}}
+    },
+    "tables": {"type": "array", "items": {"type": "object"}},
+    "draft_summary": {
+      "type": "object",
+      "properties": {
+        "figure": {"type": "object"},
+        "entity_count": {"type": "integer"},
+        "relation_count": {"type": "integer"},
+        "legend_count": {"type": "integer"},
+        "entities": {"type": "array", "items": {"type": "object"}},
+        "relations": {"type": "array", "items": {"type": "object"}},
+        "uncertainties": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "must_decide": {
+      "type": "array",
+      "description": "Questions only the agent can settle from the materials: entity identity, interaction direction, grouping, unit, legend-vs-data conflicts.",
+      "items": {"type": "object", "properties": {
+        "id": {"type": "string"}, "question": {"type": "string"},
+        "options": {"type": "array", "items": {"type": "string"}},
+        "evidence": {"type": "string"}, "default": {"type": "string"}}}
+    },
+    "tools_available": {"type": "object"},
+    "instructions": {"type": "array", "items": {"type": "string"}}
+  }
+}

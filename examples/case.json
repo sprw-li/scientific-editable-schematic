@@ -1,0 +1,14 @@
+{
+  "case_id": "example-relationship-schematic",
+  "task": "依据 materials/ 中的来源材料，生成一张可编辑的机制/关系示意图，交付分层 SVG 源文件与 PDF/PNG 导出件，并标注每个元素的来源。",
+  "output_contract": {
+    "editable_source": "",
+    "figure_svg": "",
+    "figure_pdf": "",
+    "result_json": ""
+  },
+  "required_fields": ["editable_source", "figure_svg", "figure_pdf", "result_json"],
+  "materials": ["materials/demo_pathway.md", "materials/expression.csv"],
+  "figure": {"id": "demo-figure", "kind": "relationship_schematic", "canvas": {"width_mm": 180, "height_mm": 120}},
+  "notes": "示例输入：演示 editable_relationship_schematic 的最小调用。示意结果见 examples/expected_model.json。"
+}
