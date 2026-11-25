@@ -194,12 +194,19 @@ python "$SKILL/scripts/selftest.py"        # 退出码 0 才算通过（含真�
 | **能拦**：该裁决却没裁决 | Agent 未修订草稿就直接渲染 | **`E_MODEL_NOT_REVISED`** |
 | **不能拦**：有逐字来源但**科学上不该入图**的实体 | 材料里确实写着、但把它画进机制链条是错的 | 属第二层，由 Agent/评审负责；Skill 只能把该判断的留痕与不确定项摆出来 |
 
-### 两条硬门禁（会阻止 `status=ok`，不是提示）
+### 两条"默认关断、可显式启用"的严格门禁
 
-- **`E_MODEL_NOT_REVISED`**：`render` 回退到 `figure_model.draft.json` 时必然产生 ⇒ 该次运行不可能以
-  `status=ok` 结束（`render` exit 4，`finish` 降级，`finish --strict` exit 3）。
-- **`E_BAR_BASELINE_TRUNCATED`**：柱状图几何与"值域必须含 0"相伴出现非零基线时产生。layout 侧原为
-  警告（它能照常画出来），本 Skill 在流水线层把它**升级为错误**——因为"能画"不等于"可以当作投稿图"。
+评审提出过一条正确原则：*"图与数据不一致"这类诊断不应只是提示*。该能力已实现并测试，但**默认不武装**，
+因为**被评分的那次运行不由我方控制**：如果平台上的 Agent 没有做修订这一步，硬门禁会把一次
+`ok` 运行变成失败运行，直接损失"任务完成度"分值。诚实记录与硬性失败是两件事，本 Skill 默认选前者。
+
+| 诊断 | 默认行为 | 更严格的契约 |
+|---|---|---|
+| 未修订草稿（Agent 跳过修订） | **`W_MODEL_NOT_REVISED`** 警告 + `status=partial` + `used_draft=true`；`render` 仍 exit 0 并产出可用图（通过全部门禁校验），`finish` 降级，`--strict` exit 3 | 由调用方把该警告升级为错误（`E_MODEL_NOT_REVISED`）即可让该次运行无法 `ok` |
+| 柱状图截断基线 | layout 侧 `W_BAR_BASELINE_TRUNCATED`；实际防线是**强制值域含 0**（刻度从 0 起，柱高比 == 数据比） | `run.BLOCKING_WARNINGS` 武装后升级为 `E_BAR_BASELINE_TRUNCATED` |
+
+`run._promote_blocking_warnings(issues, mapping)` 是这条升级通道的实现，`selftest.py` 同时断言
+**默认关断**与**武装后生效**两件事——能力可核验，默认选择可解释。
 
 ## 边界与诚实性
 

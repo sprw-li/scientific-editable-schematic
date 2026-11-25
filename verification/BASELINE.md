@@ -90,10 +90,10 @@ the gold figure*, enumerated by the tool (the list is printed and stored in
   **0.07 s – 3.7 s**, so treat the multiplier as "one to two orders of magnitude", not a precise
   figure.
 * The Skill needs **0** manual repairs on both fixtures at the code-verified revision
-  (`tree_sha256 2ec1a519aa7fad72e4920ff1dd6aa36e2eff186736e9364dea4bd43aee0a30a9`); the naive
-  baseline needs **7** on each. The last two revision rounds touched the pipeline's warning
-  escalation (`run.py`), `selftest.py` and documentation; the stages this comparison measures
-  (`prepare/render/export/finish`) behave identically, and the numbers below were re-measured on
+  (`tree_sha256 78ee24f5b60264bf4012a5e209972862a3e60f26b6100286a67073ed91ce4cac`); the naive
+  baseline needs **7** on each. The later revision rounds changed pipeline gate defaults
+  (`run.py`), `selftest.py` and documentation; the stages this comparison measures
+  (`prepare/render/export/finish`) behave identically, and the numbers here were re-measured on
   this tree.
 * Case B's Skill side wins the trap that the baseline falls into (the stale caption): the
   baseline reproduces "mm" and two taxa, which is exactly the failure the fixture was built to

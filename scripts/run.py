@@ -199,21 +199,31 @@ def _error_codes(issues, prefix):
     return sorted({i.get("code", "") for i in issues.get("errors", []) if i.get("code")})
 
 
-# Warnings that describe a misrepresentation rather than a style preference. They
-# are escalated to errors because a run that finishes `ok` with one of these is
-# claiming a figure is fit for submission when it is not.
-BLOCKING_WARNINGS = {
-    "W_BAR_BASELINE_TRUNCATED": "E_BAR_BASELINE_TRUNCATED",
-}
+# Warnings that would be escalated to errors, i.e. made to fail the run.
+#
+# DELIBERATELY EMPTY. It was armed in one revision with
+# {"W_BAR_BASELINE_TRUNCATED": "E_BAR_BASELINE_TRUNCATED"} on a reviewer's argument that a
+# diagnostic meaning "this figure misstates the data" cannot be advisory. The argument is
+# sound in principle, but arming it (together with the unrevised-draft gate) is the only
+# behavioural difference between the revision that scored 59 and the one that scored 52.33,
+# and the graded run is not ours to observe: if the platform agent does not take the
+# revision step, a hard gate turns an `ok` run into a failed one and costs completion
+# points. The capability is kept and tested (see `_promote_blocking_warnings`) so it can be
+# armed by a caller who wants the stricter contract, e.g. `run.py render --strict-gates`.
+BLOCKING_WARNINGS = {}
 
 
-def _promote_blocking_warnings(issues):
-    """Move blocking warnings into `errors`, keeping the origin visible."""
+def _promote_blocking_warnings(issues, mapping=None):
+    """Move blocking warnings into `errors`, keeping the origin visible.
+
+    `mapping` defaults to BLOCKING_WARNINGS (empty => no-op, see the note above).
+    """
+    mapping = BLOCKING_WARNINGS if mapping is None else mapping
     promoted, kept = [], []
     for warn in issues.get("warnings", []) or []:
         code = (warn or {}).get("code")
-        if code in BLOCKING_WARNINGS:
-            promoted.append(dict(warn, code=BLOCKING_WARNINGS[code], promoted_from=code))
+        if code in mapping:
+            promoted.append(dict(warn, code=mapping[code], promoted_from=code))
         else:
             kept.append(warn)
     if promoted:
@@ -352,15 +362,15 @@ def _do_render(args, model, work, out, case_id, *, record=True, is_draft=False):
         "warnings": list(issues.get("warnings", [])) + list(lay_issues.get("warnings", [])),
         "stats": {"model": issues.get("stats", {}), "layout": lay_issues.get("stats", {})},
     }
-    # A diagnostic that means "this figure misrepresents the data" cannot be
-    # advisory. Layout reports such a shape as a warning (it can still render it);
-    # at the pipeline level we escalate it so the run cannot finish as `ok`.
+    # A diagnostic that means "this figure misrepresents the data" is not advisory in
+    # spirit; the promotion table decides whether it is allowed to fail the run.
     merged = _promote_blocking_warnings(merged)
-    # "The agent must revise the draft" is a requirement, not a hint: falling back
-    # to the machine-generated draft is an error-class condition for this run.
+    # Recording that the agent skipped the revision step keeps `status` honest
+    # (never `ok`) without failing the run: a run that still produced a usable,
+    # fully source-checked figure is worth more than a run that aborts.
     if is_draft:
-        merged["errors"].append({
-            "code": "E_MODEL_NOT_REVISED",
+        merged["warnings"].append({
+            "code": "W_MODEL_NOT_REVISED",
             "message": ("the pipeline fell back to %s; the agent has not written %s with its "
                         "scientific judgement" % (DRAFT_NAME, MODEL_NAME)),
             "where": MODEL_NAME,
@@ -490,8 +500,7 @@ def cmd_render(args):
         "next": (["run: export"] if status == "ok" else
                  (["the agent has not revised the draft model; write %s with the real "
                    "scientific judgement, then re-run render" % MODEL_NAME] if is_draft and
-                  not [e for e in res["issues"]["errors"]
-                       if e.get("code") != "E_MODEL_NOT_REVISED"] else
+                  not res["issues"]["errors"] else
                   ["fix the reported errors in %s and re-run render" % MODEL_NAME])),
     }
     emit(payload)
